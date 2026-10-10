@@ -1,22 +1,23 @@
 <title>Marking Homework Helper</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Carlito:wght@400;700&display=swap">
 <style>
-  /* Layout: one centred white panel on a soft grey ground. Results open in a
-     scrolling pop-up made of labelled cards, as in the reference screens. */
+  /* Layout: one centred white panel on a beige ground. Results open in a
+     scrolling pop-up made of labelled cards, as in the reference screens.
+     Colours: the tutor's palette - indigo blue letters on beige and white. */
   :root {
-    --ground: #ecedee;
-    --ground-light: #f8f8f9;
+    --ground: #cec1a1;        /* beige */
+    --ground-light: #e7dec8;  /* beige, lighter */
     --panel: #ffffff;
-    --ink: #111214;
-    --ink-soft: #6a6e73;
-    --line: #c6c8cb;
-    --line-soft: #e3e4e6;
-    --button: #f1f1f2;
-    --button-press: #e2e3e5;
-    --approved: #1c6b47;
-    --alert: #a3271f;
-    --veil: rgba(17, 18, 20, 0.4);
-    --shadow: 0 18px 50px rgba(17, 18, 20, 0.1);
+    --quiet: #f6f6f6;         /* palette white */
+    --ink: #1b4578;           /* palette blue */
+    --ink-soft: #4f6d94;      /* the same blue, lighter */
+    --line: #a0a0a0;          /* palette grey */
+    --line-soft: #dbe4ea;
+    --button: #c5d6e1;        /* palette pale blue */
+    --button-press: #b1c6d4;
+    --alert: #856048;         /* palette brown */
+    --veil: rgba(20, 44, 78, 0.5);
+    --shadow: 0 18px 50px rgba(27, 69, 120, 0.16);
 
     --font: Calibri, Carlito, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
     --size-title: clamp(1.9rem, 6.2vw, 2.9rem);
@@ -333,8 +334,8 @@
     font-size: var(--size-button);
   }
   #approve svg { width: 22px; height: 22px; display: none; }
-  #approve:disabled { background: var(--button); color: var(--ink-soft); }
-  #approve.done, #approve.done:disabled { background: var(--approved); color: var(--panel); }
+  #approve:disabled { background: var(--quiet); color: var(--ink-soft); }
+  #approve.done, #approve.done:disabled { background: var(--button); color: var(--ink); }
   #approve.done svg { display: block; }
 
   @media (max-width: 420px) {
