@@ -489,25 +489,49 @@
   const looksLikeName = (text, maxWords) =>
     text.length > 0 && text.length <= 40 && !/[.!?,;]/.test(text) && text.split(/\s+/).length <= maxWords;
 
-  // Responses are separated by an empty line. Each one may start with a letter
-  // or a name, either as "J: writing" or as "J" on its own line above the writing.
-  function splitResponses(pasted) {
-    const blocks = pasted.replace(/\r\n?/g, "\n").split(/\n\s*\n/).map((b) => b.trim()).filter(Boolean);
+  // What one paragraph of the pasted text is:
+  //   "colon" - "J: writing"
+  //   "line"  - "J" on the first line, the writing straight under it
+  //   "alone" - only "J" (or "J:"), with the writing in the next paragraph
+  //   "plain" - writing with no letter or name
+  function readBlock(block) {
+    const lineEnd = block.indexOf("\n");
+    const first = (lineEnd === -1 ? block : block.slice(0, lineEnd)).trim();
+    const below = lineEnd === -1 ? "" : block.slice(lineEnd + 1).trim();
+    const colon = first.search(/:(\s|$)/);
+    if (colon !== -1) {
+      const label = first.slice(0, colon).trim();
+      const text = (first.slice(colon + 1).trim() + "\n" + below).trim();
+      if (looksLikeName(label, 5)) return text ? { kind: "colon", label, text } : { kind: "alone", label };
+    } else if (looksLikeName(first, 3)) {
+      return below ? { kind: "line", label: first, text: below } : { kind: "alone", label: first };
+    }
+    return { kind: "plain" };
+  }
 
-    const responses = blocks.map((block) => {
-      const lineEnd = block.indexOf("\n");
-      const first = (lineEnd === -1 ? block : block.slice(0, lineEnd)).trim();
-      const below = lineEnd === -1 ? "" : block.slice(lineEnd + 1).trim();
-      const colon = first.search(/:(\s|$)/);
-      if (colon !== -1) {
-        const label = first.slice(0, colon).trim();
-        const text = (first.slice(colon + 1).trim() + "\n" + below).trim();
-        if (looksLikeName(label, 5) && text) return { label, text };
-      } else if (below && looksLikeName(first, 3)) {
-        return { label: first, text: below };
+  // A new response starts at each letter or name, and runs until the next one.
+  // When the pasted text has no letters or names, each paragraph is a response.
+  function splitResponses(pasted) {
+    const blocks = pasted.replace(/\r\n?/g, "\n").split(/\n\s*\n/)
+      .map((b) => b.trim()).filter(Boolean)
+      .map((raw) => ({ raw, ...readBlock(raw) }));
+
+    const responses = [];
+    for (let i = 0; i < blocks.length; i += 1) {
+      const block = blocks[i];
+      const next = blocks[i + 1];
+      if (block.kind === "alone" && next && (next.kind === "plain" || next.kind === "line")) {
+        responses.push({ label: block.label, text: next.raw, named: true });
+        i += 1;
+      } else if (block.kind === "colon" || block.kind === "line") {
+        responses.push({ label: block.label, text: block.text, named: true });
+      } else {
+        // Writing with no letter or name: more of the named response above it, or a response of its own.
+        const last = responses[responses.length - 1];
+        if (last && last.named) last.text += "\n\n" + block.raw;
+        else responses.push({ label: "", text: block.raw, named: false });
       }
-      return { label: "", text: block };
-    });
+    }
 
     // A response with no letter or name gets the next free letter.
     const taken = new Set(responses.map((r) => r.label.toUpperCase()));

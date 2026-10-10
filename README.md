@@ -4,7 +4,15 @@ A page for a private writing tutor. The tutor pastes a child's homework, picks A
 
 ## Pasting homework
 
-Several responses can be pasted in one go, with an empty line between them. Each response may start with a letter or a name, written as `J: the writing` or as `J` on its own line above the writing. A response with no letter or name is given one in order: A, B, C.
+Several responses can be pasted in one go. Put the student's letter or name first, then the writing:
+
+```
+J
+
+My favourite animal is an axolotl.
+```
+
+`J: My favourite animal is an axolotl.` works too. A new response starts at each letter or name and runs until the next one. If the pasted text has no letters or names, each paragraph is a response and they are named A, B, C in order.
 
 Each response gets its own view in the pop-up, titled `J: Age 10`. The arrows in the pop-up header move between them.
 
