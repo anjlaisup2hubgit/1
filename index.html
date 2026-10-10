@@ -307,6 +307,14 @@
     text-transform: uppercase;
   }
 
+  .gibberish {
+    padding: 14px 18px;
+    border: 1px solid var(--alert);
+    border-radius: 16px;
+    color: var(--alert);
+    font-weight: 700;
+  }
+
   /* Score */
   .score { display: flex; flex-direction: column; gap: 6px; }
   .score-line {
@@ -462,6 +470,8 @@
       </div>
 
       <div class="results" id="results" hidden>
+        <p class="gibberish" id="gibberish" role="status" hidden>This text is gibberish, so it is marked 0.0/10.</p>
+
         <section class="score" aria-labelledby="score-label">
           <label class="label" id="score-label" for="score">Suggested score</label>
           <div class="score-line">
@@ -475,6 +485,7 @@
           <p class="writing" id="writing"></p>
         </section>
 
+        <div class="results" id="marking">
         <section class="card" aria-labelledby="spelling-label">
           <div class="card-head">
             <h3 class="label" id="spelling-label">Spelling mistakes</h3>
@@ -529,6 +540,7 @@
             <span id="approve-text">Approve</span>
           </button>
         </div>
+        </div>
       </div>
     </div>
   </div>
@@ -545,7 +557,8 @@
     steps: $("steps"), prev: $("prev"), next: $("next"), body: $("popup-body"),
     status: $("status"), statusText: $("status-text"),
     problem: $("problem"), problemText: $("problem-text"), retry: $("retry"),
-    results: $("results"), score: $("score"), writing: $("writing"),
+    results: $("results"), gibberish: $("gibberish"), marking: $("marking"),
+    score: $("score"), writing: $("writing"),
     feedbackView: $("feedback-view"), feedbackEdit: $("feedback-edit"),
     feedbackHint: $("feedback-hint"), feedbackProblem: $("feedback-problem"),
     feedbackProblemText: $("feedback-problem-text"), feedbackRetry: $("feedback-retry"),
@@ -598,7 +611,8 @@
     for (let i = 0; i < blocks.length; i += 1) {
       const block = blocks[i];
       const next = blocks[i + 1];
-      if (block.kind === "alone" && next && (next.kind === "plain" || next.kind === "line")) {
+      // A name on its own takes the next paragraph as its writing, even a one-word one.
+      if (block.kind === "alone" && next && next.kind !== "colon") {
         responses.push({ label: block.label, text: next.raw, named: true });
         i += 1;
       } else if (block.kind === "colon" || block.kind === "line") {
@@ -628,6 +642,7 @@
   const one = (n) => n.toFixed(1);
 
   function scoreFor(report) {
+    if (report.gibberish) return 0;
     const off = GROUPS.reduce((sum, g) => sum + report[g].length * POINTS_OFF[g], 0);
     return Math.max(0, 10 - off);
   }
@@ -659,8 +674,10 @@
       "- List a mistake only when you are sure it is one. Do not guess what the child meant.",
       "- Do not make assumptions about the child.",
       "",
+      "Gibberish: if the writing is random letters or symbols with no real words, such as \"sdfjsfjsj\", it is gibberish. Writing that has real words is not gibberish, even when it has many mistakes. For gibberish, set \"gibberish\" to true and leave the three lists empty.",
+      "",
       "Reply with only one JSON object in this shape:",
-      '{"spelling":[{"wrong":"the wrong word, exactly as written","right":"the correct word"}],' +
+      '{"gibberish":false,"spelling":[{"wrong":"the wrong word, exactly as written","right":"the correct word"}],' +
         '"grammar":[{"wrong":"the phrase or sentence, exactly as written","right":"the same phrase or sentence, fully correct"}],' +
         '"logic":[{"quote":"the words, exactly as written","problem":"one short, plain sentence that says what does not make sense"}]}',
       "Use an empty list [] for a group that has no mistakes.",
@@ -740,7 +757,9 @@
     const pairs = (list) => list
       .map((m) => ({ wrong: clean(m && m.wrong), right: clean(m && m.right) }))
       .filter((m) => m.wrong && m.right);
+    if (raw.gibberish === true) return { gibberish: true, spelling: [], grammar: [], logic: [] };
     return {
+      gibberish: false,
       spelling: pairs(raw.spelling),
       grammar: pairs(raw.grammar),
       logic: raw.logic
@@ -836,6 +855,12 @@
     }
     item.stage = "done";
 
+    // Gibberish is marked 0.0 and gets no feedback.
+    if (item.report.gibberish) {
+      item.feedbackStage = "none";
+      return refresh(s, item);
+    }
+
     const memo = s.age + "\n" + item.text;
     item.feedbackStage = "writing";
     item.feedback = "";
@@ -894,6 +919,8 @@
     paintResults(item);
     paintFeedback(item);
     syncControls(item);
+    el.gibberish.hidden = !item.report.gibberish;
+    el.marking.hidden = item.report.gibberish;
     showOnly(el.results);
   }
 

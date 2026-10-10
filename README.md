@@ -23,3 +23,5 @@ Each response gets its own view in the pop-up, titled `J: Age 10`. The arrows in
 ## Scoring
 
 Start at 10.0. Take off 0.5 per spelling mistake, 0.5 per grammar mistake (punctuation and capital letters count as grammar) and 1.0 per logic mistake. A repeated mistake counts once. The lowest score is 0.0.
+
+Gibberish (random letters with no real words, such as `sdfjsfjsj`) is marked 0.0. The pop-up says so and shows no mistake lists or feedback.
