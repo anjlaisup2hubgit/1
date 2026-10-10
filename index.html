@@ -1,9 +1,12 @@
 <title>Marking Homework Helper</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Carlito:wght@400;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Carlito:wght@400;700&family=Shippori+Mincho:wght@500;600;700&display=swap">
 <style>
   /* Layout: one centred white panel on a beige ground. Results open in a
      scrolling pop-up made of labelled cards, as in the reference screens.
-     Colours: the tutor's palette - indigo blue letters on beige and white. */
+     Colours: the tutor's palette - indigo blue letters on beige and white.
+     Details come from the same pictures: woodblock-print waves along the foot
+     of the page, indigo pinstripe cloth, running stitch on the buttons, and a
+     seal for approval. */
   :root {
     --ground: #cec1a1;        /* beige */
     --ground-light: #e7dec8;  /* beige, lighter */
@@ -16,10 +19,13 @@
     --button: #c5d6e1;        /* palette pale blue */
     --button-press: #b1c6d4;
     --alert: #856048;         /* palette brown */
+    --seal: #856048;          /* the approval seal, same brown */
+    --stripe: rgba(246, 246, 246, 0.5);  /* pinstripe on the blue cloth */
     --veil: rgba(20, 44, 78, 0.5);
     --shadow: 0 18px 50px rgba(27, 69, 120, 0.16);
 
     --font: Calibri, Carlito, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    --display: "Shippori Mincho", "Hiragino Mincho ProN", "Yu Mincho", "Songti SC", Georgia, "Times New Roman", serif;
     --size-title: clamp(1.9rem, 6.2vw, 2.9rem);
     --size-score: clamp(3rem, 12vw, 4.25rem);
     --size-button: 1.45rem;
@@ -45,6 +51,19 @@
     line-height: 1.5;
   }
 
+  body::after {
+    content: "";
+    position: fixed;
+    inset: auto 0 0 0;
+    height: clamp(84px, 20vh, 168px);
+    z-index: 0;
+    pointer-events: none;
+    /* fill is --ground, lines are --quiet */
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='32' viewBox='0 0 64 32'%3E%3Cdefs%3E%3Cg id='w' fill='%23cec1a1' stroke='%23f6f6f6' stroke-opacity='.85' stroke-width='1.1'%3E%3Ccircle r='32'/%3E%3Ccircle r='24.5'/%3E%3Ccircle r='17'/%3E%3Ccircle r='9.5'/%3E%3Ccircle r='2.6' fill='%23f6f6f6' fill-opacity='.85' stroke='none'/%3E%3C/g%3E%3C/defs%3E%3Cuse href='%23w' x='0' y='0'/%3E%3Cuse href='%23w' x='64' y='0'/%3E%3Cuse href='%23w' x='32' y='16'/%3E%3Cuse href='%23w' x='0' y='32'/%3E%3Cuse href='%23w' x='64' y='32'/%3E%3Cuse href='%23w' x='32' y='48'/%3E%3C/svg%3E") repeat left bottom / 64px 32px;
+    -webkit-mask-image: linear-gradient(to top, #000 30%, transparent);
+    mask-image: linear-gradient(to top, #000 30%, transparent);
+  }
+
   *, *::before, *::after { box-sizing: border-box; }
   h1, h2, h3, p, ul { margin: 0; }
   ul { padding: 0; list-style: none; }
@@ -61,6 +80,8 @@
   /* ---------- Main page ---------- */
 
   .page {
+    position: relative;
+    z-index: 1;
     max-width: 750px;
     margin-inline: auto;
     display: flex;
@@ -69,22 +90,39 @@
   }
 
   .page h1 {
+    align-self: center;
+    padding: 0 0.35em 0.2em;
+    border-bottom: 1px solid var(--ink);
+    font-family: var(--display);
     font-size: var(--size-title);
-    font-weight: 400;
-    line-height: 1.15;
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: 0.01em;
     text-align: center;
     text-wrap: balance;
   }
+  .page h1 .word { display: inline-block; }
+  .page h1 .word::first-letter { font-size: 1.38em; }
 
   .panel {
+    position: relative;
+    overflow: hidden;
     background: var(--panel);
     border-radius: 22px;
     box-shadow: var(--shadow);
-    padding: clamp(24px, 6vw, 44px) clamp(18px, 4.5vw, 32px) clamp(28px, 7vw, 60px);
+    padding: calc(clamp(24px, 6vw, 44px) + 10px) clamp(18px, 4.5vw, 32px) clamp(28px, 7vw, 60px);
     display: flex;
     flex-direction: column;
     gap: 16px;
   }
+
+  .panel::before, .popup::before {
+    content: "";
+    flex: none;
+    height: 12px;
+    background: repeating-linear-gradient(90deg, var(--ink) 0 9px, var(--stripe) 9px 10px);
+  }
+  .panel::before { position: absolute; inset: 0 0 auto 0; }
 
   #homework {
     display: block;
@@ -98,6 +136,11 @@
     line-height: 1.5;
   }
   #homework::placeholder { color: var(--ink-soft); opacity: 1; }
+  #homework:focus-visible, #feedback-edit:focus-visible, #score:focus-visible {
+    outline: 3px solid var(--button);
+    outline-offset: 0;
+    border-color: var(--ink);
+  }
 
   .notice { color: var(--alert); }
 
@@ -116,9 +159,22 @@
     border: 0;
     border-radius: 22px;
     background: var(--button);
+    font-family: var(--display);
     font-size: var(--size-button);
+    font-weight: 600;
+    letter-spacing: 0.03em;
   }
   .age:hover, .age:active { background: var(--button-press); }
+  .age, #approve { position: relative; }
+  .age::before, #approve::before {
+    content: "";
+    position: absolute;
+    inset: 6px;
+    border: 1.5px dashed currentColor;
+    border-radius: 16px;
+    opacity: 0.45;
+    pointer-events: none;
+  }
 
   /* ---------- Pop-up ---------- */
 
@@ -157,9 +213,11 @@
     flex: 1 1 auto;
     min-width: 0;
     overflow-wrap: anywhere;
+    font-family: var(--display);
     font-size: 1.5rem;
     font-weight: 700;
-    line-height: 1.2;
+    line-height: 1.25;
+    letter-spacing: 0.01em;
   }
   .head-tools { flex: none; display: flex; align-items: center; gap: 10px; }
   .steps { display: flex; gap: 8px; }
@@ -243,8 +301,10 @@
 
   .label {
     color: var(--ink-soft);
-    font-size: var(--size-label);
+    font-size: 0.8125rem;
     font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
   }
 
   /* Score */
@@ -261,14 +321,15 @@
     border: 1px solid var(--line);
     border-radius: 14px;
     background: var(--panel);
+    font-family: var(--display);
     font-size: var(--size-score);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.2;
     text-align: center;
     font-variant-numeric: tabular-nums;
   }
   #score:disabled { color: var(--ink); opacity: 1; -webkit-text-fill-color: var(--ink); }
-  .out-of { font-size: calc(var(--size-score) * 0.45); color: var(--ink-soft); }
+  .out-of { font-family: var(--display); font-size: calc(var(--size-score) * 0.45); color: var(--ink-soft); }
 
   /* Cards */
   .card {
@@ -288,6 +349,8 @@
     gap: 4px 12px;
     min-height: 40px;
   }
+  .card .label { display: flex; align-items: center; gap: 9px; }
+  .card .label::before { content: ""; width: 3px; height: 14px; border-radius: 1px; background: var(--ink); }
   .tally { color: var(--ink-soft); font-size: var(--size-label); font-variant-numeric: tabular-nums; }
   .tools { display: flex; gap: 2px; margin-right: -8px; }
 
@@ -331,12 +394,26 @@
     border-radius: 22px;
     background: var(--ink);
     color: var(--panel);
+    font-family: var(--display);
     font-size: var(--size-button);
+    font-weight: 600;
+    letter-spacing: 0.03em;
   }
-  #approve svg { width: 22px; height: 22px; display: none; }
+  #approve .seal {
+    display: none;
+    width: 28px;
+    height: 28px;
+    place-items: center;
+    border-radius: 6px;
+    background: var(--seal);
+    color: var(--panel);
+    box-shadow: inset 0 0 0 1.5px var(--seal), inset 0 0 0 3px var(--panel);
+    transform: rotate(-6deg);
+  }
+  #approve .seal svg { width: 16px; height: 16px; display: block; }
   #approve:disabled { background: var(--quiet); color: var(--ink-soft); }
   #approve.done, #approve.done:disabled { background: var(--button); color: var(--ink); }
-  #approve.done svg { display: block; }
+  #approve.done .seal { display: grid; }
 
   @media (max-width: 420px) {
     #approve { width: 100%; min-width: 0; }
@@ -344,7 +421,7 @@
 </style>
 
 <main class="page" id="page">
-  <h1>Marking Homework Helper</h1>
+  <h1><span class="word">Marking</span> <span class="word">Homework</span> <span class="word">Helper</span></h1>
 
   <section class="panel" aria-label="Homework">
     <label class="sr-only" for="homework">Child's homework</label>
@@ -448,7 +525,7 @@
 
         <div class="approve-row">
           <button id="approve" type="button">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+            <span class="seal" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
             <span id="approve-text">Approve</span>
           </button>
         </div>
